@@ -103,6 +103,14 @@
         </exec>
     </target>
 
+    <target name="transformStationObject">
+        <echo>Transform the Result Data</echo>
+        <exec executable="sqlplus" failonerror="true">
+            <arg value="wqp_core/${wqp_core_password}@${instance}"/>
+            <arg value="@${basedir}/transformStationObject.sql"/>
+        </exec>
+    </target>
+
     <target name="transformActivity">
         <echo>Transform the Result Data</echo>
         <exec executable="sqlplus" failonerror="true">
@@ -116,6 +124,14 @@
         <exec executable="sqlplus" failonerror="true">
             <arg value="wqp_core/${wqp_core_password}@${instance}"/>
             <arg value="@${basedir}/transformActivityMetric.sql"/>
+        </exec>
+    </target>
+
+    <target name="transformActivityObject">
+        <echo>Transform the Result Data</echo>
+        <exec executable="sqlplus" failonerror="true">
+            <arg value="wqp_core/${wqp_core_password}@${instance}"/>
+            <arg value="@${basedir}/transformActivityObject.sql"/>
         </exec>
     </target>
 
@@ -140,6 +156,14 @@
         <exec executable="sqlplus" failonerror="true">
             <arg value="wqp_core/${wqp_core_password}@${instance}"/>
             <arg value="@${basedir}/transformProjectMLWeighting.sql"/>
+        </exec>
+    </target>
+
+    <target name="transformResultObject">
+        <echo>Transform the Result Data</echo>
+        <exec executable="sqlplus" failonerror="true">
+            <arg value="wqp_core/${wqp_core_password}@${instance}"/>
+            <arg value="@${basedir}/transformResultObject.sql"/>
         </exec>
     </target>
 
