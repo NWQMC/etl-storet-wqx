@@ -43,7 +43,7 @@ insert /*+ append parallel(4) */
 select  3 data_source_id,
         project_data_swap_storet.project_id project_id,
         station_swap_storet.station_id station_id,
-        'SOTRET' data_source,
+        'STORET' data_source,
         station_swap_storet.site_id site_id,
         project_data_swap_storet.organization organization,
         project_data_swap_storet.organization_name organization_name,
