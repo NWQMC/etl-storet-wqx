@@ -2,6 +2,7 @@ directory=WQPSTAGE
 dumpfile=owpub_vmwaters1_wqx_Weekly_%u.cdmp
 logfile=owpub_vmwaters1_wqx_Weekly_impdp.log
 tables=(
+	address_type,
 	activity,
 	activity_conducting_org,
 	activity_media,
@@ -25,6 +26,7 @@ tables=(
 	country,
 	county,
 	detection_quant_limit_type,
+	electronic_address_type,
 	frequency_class_descriptor,
 	habit,
 	horizontal_collection_method,
@@ -41,6 +43,7 @@ tables=(
 	org_address,
 	org_electronic_address,
 	org_phone,
+	phone_type,
 	project,
 	reference_location_type,
 	relative_depth,
