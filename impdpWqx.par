@@ -27,6 +27,7 @@ tables=(
 	county,
 	detection_quant_limit_type,
 	electronic_address_type,
+	epa_region,
 	frequency_class_descriptor,
 	habit,
 	horizontal_collection_method,
@@ -73,8 +74,8 @@ tables=(
 	taxon,
 	thermal_preservative,
 	time_zone,
-	tribe,
 	toxicity_test_type,
+	tribe,
 	vertical_reference_datum,
 	vertical_collection_method,
 	voltinism
