@@ -39,7 +39,8 @@ insert /*+ append parallel(4) */
                              act_sam_collect_meth_qual_type, act_sam_collect_meth_desc, sample_collect_equip_name, act_sam_collect_equip_comments,
                              act_sam_prep_meth_id, act_sam_prep_meth_context, act_sam_prep_meth_name, act_sam_prep_meth_qual_type,
                              act_sam_prep_meth_desc, sample_container_type, sample_container_color, act_sam_chemical_preservative,
-                             thermal_preservative_name, act_sam_transport_storage_desc)
+                             thermal_preservative_name, act_sam_transport_storage_desc, activity_object_name, activity_object_type,
+                             activity_file_url, result_count)
 select /*+ parallel(4) */ 
        3 data_source_id,
        'STORET' data_source,
@@ -130,7 +131,11 @@ select /*+ parallel(4) */
        container_color.concol_name sample_container_color,
        activity.act_sam_chemical_preservative,
        thermal_preservative.thprsv_name thermal_preservative_name,
-       activity.act_sam_transport_storage_desc
+       activity.act_sam_transport_storage_desc,
+       attached_object.activity_object_name,
+       attached_object.activity_object_type,
+       '/organizations/' || station.organization || '/activities/' || station.organization || '-' || activity.act_id || '/files'  activity_file_url,
+       null result_count
   from wqx.activity
        join station_swap_storet station
          on activity.mloc_uid = station.station_id
@@ -194,7 +199,14 @@ select /*+ parallel(4) */
        left join wqx.thermal_preservative
          on activity.thprsv_uid = thermal_preservative.thprsv_uid
        left join wqx.relative_depth
-         on activity.reldpth_uid = relative_depth.reldpth_uid;
+         on activity.reldpth_uid = relative_depth.reldpth_uid
+       left join (select atobj_uid,
+                         listagg(atobj_file_name, ';') within group (order by rownum) activity_object_name,
+                         listagg(atobj_type, ';') within group (order by rownum) activity_object_type
+                    from wqx.attached_object
+                      group by atobj_uid) as attached_object
+         on activity.act_uid = atobj_uid
+
 commit;
 select 'Building activity_swap_storet complete: ' || systimestamp from dual;
 
