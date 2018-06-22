@@ -135,7 +135,7 @@ select /*+ parallel(4) */
        attached_object.activity_object_name,
        attached_object.activity_object_type,
        '/organizations/' || station.organization || '/activities/' || station.organization || '-' || activity.act_id || '/files'  activity_file_url,
-       null result_count
+       (select count(*) from wqx.result where result.act_uid = activity.act_uid) result_count result_count
   from wqx.activity
        join station_swap_storet station
          on activity.mloc_uid = station.station_id
