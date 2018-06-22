@@ -79,6 +79,14 @@
         </exec>
     </target>
 
+    <target name="transformOrgData">
+        <echo>Transform the Project Data</echo>
+        <exec executable="sqlplus" failonerror="true">
+            <arg value="wqp_core/${wqp_core_password}@${instance}"/>
+            <arg value="@${basedir}/transformOrgData.sql"/>
+        </exec>
+    </target>
+
     <target name="transformProject">
         <echo>Transform the Project Data</echo>
         <exec executable="sqlplus" failonerror="true">
