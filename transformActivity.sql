@@ -205,7 +205,7 @@ select /*+ parallel(4) */
                          listagg(atobj_type, ';') within group (order by rownum) activity_object_type
                     from wqx.attached_object
                       group by atobj_uid) attached_object
-         on activity.act_uid = activity_object_swap_storet atobj_uid;
+         on activity.act_uid = attached_object atobj_uid;
 
 commit;
 select 'Building activity_swap_storet complete: ' || systimestamp from dual;
