@@ -135,7 +135,7 @@ select /*+ parallel(4) */
        attached_object.activity_object_name,
        attached_object.activity_object_type,
        '/organizations/' || station.organization || '/activities/' || station.organization || '-' || activity.act_id || '/files'  activity_file_url,
-       (select count(*) from wqx.result where result.act_uid = activity.act_uid) result_count result_count
+       (select count(*) from wqx.result where result.act_uid = activity.act_uid) result_count
   from wqx.activity
        join station_swap_storet station
          on activity.mloc_uid = station.station_id
@@ -204,8 +204,8 @@ select /*+ parallel(4) */
                          listagg(atobj_file_name, ';') within group (order by rownum) activity_object_name,
                          listagg(atobj_type, ';') within group (order by rownum) activity_object_type
                     from wqx.attached_object
-                      group by atobj_uid) as attached_object
-         on activity.act_uid = atobj_uid
+                      group by atobj_uid) attached_object
+         on activity.act_uid = activity_object_swap_storet atobj_uid;
 
 commit;
 select 'Building activity_swap_storet complete: ' || systimestamp from dual;
