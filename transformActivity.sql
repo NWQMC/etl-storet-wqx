@@ -40,7 +40,7 @@ insert /*+ append parallel(4) */
                              act_sam_prep_meth_id, act_sam_prep_meth_context, act_sam_prep_meth_name, act_sam_prep_meth_qual_type,
                              act_sam_prep_meth_desc, sample_container_type, sample_container_color, act_sam_chemical_preservative,
                              thermal_preservative_name, act_sam_transport_storage_desc, activity_object_name, activity_object_type,
-                             activity_file_url, result_count)
+                             activity_file_url)
 select /*+ parallel(4) */ 
        3 data_source_id,
        'STORET' data_source,
@@ -134,8 +134,7 @@ select /*+ parallel(4) */
        activity.act_sam_transport_storage_desc,
        attached_object.activity_object_name,
        attached_object.activity_object_type,
-       '/organizations/' || station.organization || '/activities/' || station.organization || '-' || activity.act_id || '/files'  activity_file_url,
-       (select count(*) from wqx.result where result.act_uid = activity.act_uid) result_count
+       '/organizations/' || station.organization || '/activities/' || station.organization || '-' || activity.act_id || '/files'  activity_file_url
   from wqx.activity
        join station_swap_storet station
          on activity.mloc_uid = station.station_id
