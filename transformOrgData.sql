@@ -13,7 +13,7 @@ prompt populating org_data_swap_storet
 truncate table org_data_swap_storet;
 insert /*+ append parallel(4) */
   into org_data_swap_storet (data_source_id, data_source, organization_id, organization, organization_name,
-                             organization_description, tribal_code, electronic_address, telephonic, address_type_1,
+                             organization_description, organization_type, tribal_code, electronic_address, telephonic, address_type_1,
                              address_text_1, supplemental_address_text_1, locality_name_1, postal_code_1,
                              country_code_1, state_code_1, county_code_1, address_type_2, address_text_2,
                              supplemental_address_text_2, locality_name_2, postal_code_2, country_code_2,
@@ -27,6 +27,7 @@ select /*+ parallel(4) */
        organization.org_id organization,
        organization.org_name organization_name,
        organization.org_desc organization_description,
+       organization.org_type organization_type,
        tribe.trb_name tribal_code,
        org_electronic_address.electronic_address,
        org_phone.telephonic,
@@ -111,14 +112,15 @@ commit;
 
 insert /*+ append parallel(4) */
   into org_data_swap_storet (data_source_id, data_source, organization_id, organization, organization_name,
-                             organization_description)
+                             organization_description, organization_type)
 select /*+ parallel(4) */ 
        3 data_source_id,
        'STORET' data_source,
        pk_isn + 10000000  organization_id,
        organization_id organization,
        organization_name,
-       organization_description
+       organization_description,
+       organization_type
   from storetw.di_org
  where source_system is null;
 commit;
