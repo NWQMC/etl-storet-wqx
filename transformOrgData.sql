@@ -27,7 +27,7 @@ select /*+ parallel(4) */
        organization.org_id organization,
        organization.org_name organization_name,
        organization.org_desc organization_description,
-       organization.org_type organization_type
+       organization.org_type organization_type,
        tribe.trb_name tribal_code,
        org_electronic_address.electronic_address,
        org_phone.telephonic,
