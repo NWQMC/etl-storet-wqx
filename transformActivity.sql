@@ -40,7 +40,7 @@ insert /*+ append parallel(4) */
                              act_sam_prep_meth_id, act_sam_prep_meth_context, act_sam_prep_meth_name, act_sam_prep_meth_qual_type,
                              act_sam_prep_meth_desc, sample_container_type, sample_container_color, act_sam_chemical_preservative,
                              thermal_preservative_name, act_sam_transport_storage_desc, activity_object_name, activity_object_type,
-                             activity_file_url)
+                             activity_file_url, activity_metric_url)
 select /*+ parallel(4) */ 
        3 data_source_id,
        'STORET' data_source,
@@ -134,7 +134,22 @@ select /*+ parallel(4) */
        activity.act_sam_transport_storage_desc,
        attached_object.activity_object_name,
        attached_object.activity_object_type,
-       '/organizations/' || station.organization || '/activities/' || station.organization || '-' || activity.act_id || '/files'  activity_file_url
+       case
+         when attached_object.ref_uid is null
+           then null
+         else
+           '/organizations/' ||
+               pkg_dynamic_list.url_escape(station.organization, 'true') || '/activities/' ||
+               pkg_dynamic_list.url_escape(station.organization, 'true') || '-' ||
+               pkg_dynamic_list.url_escape(activity.act_id, 'true') || '/files'
+       end activity_file_url,
+       case
+         when (select count(*) from wqx.activity_metric where activity.act_uid = activity_metric.act_uid) > 0
+           then '/activities/' ||
+                   pkg_dynamic_list.url_escape(station.organization, 'true') || '-' ||
+                   pkg_dynamic_list.url_escape(activity.act_id, 'true') || '/activitymetrics'
+         else null
+       end activity_metric_url
   from wqx.activity
        join station_swap_storet station
          on activity.mloc_uid = station.station_id
@@ -199,12 +214,15 @@ select /*+ parallel(4) */
          on activity.thprsv_uid = thermal_preservative.thprsv_uid
        left join wqx.relative_depth
          on activity.reldpth_uid = relative_depth.reldpth_uid
-       left join (select atobj_uid,
+       left join (select org_uid,
+                         ref_uid,
                          listagg(atobj_file_name, ';') within group (order by rownum) activity_object_name,
                          listagg(atobj_type, ';') within group (order by rownum) activity_object_type
                     from wqx.attached_object
-                      group by atobj_uid) attached_object
-         on activity.act_uid = attached_object.atobj_uid;
+                   where tbl_uid = 3
+                      group by org_uid, ref_uid) attached_object
+         on activity.org_uid = attached_object.org_uid and
+            activity.act_uid = attached_object.ref_uid;
 
 commit;
 select 'Building activity_swap_storet complete: ' || systimestamp from dual;
