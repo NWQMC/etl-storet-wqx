@@ -97,6 +97,90 @@ select /*+ parallel(4) */ res_uid, rdqlmt_measure, msunt_cd, dqltyp_name
 commit;
 select 'Building wqx_detection_quant_limit complete: ' || systimestamp from dual;
 
+prompt populating wqx_result_taxon_habit
+truncate table wqx_result_taxon_habit;
+insert /*+ append parallel(4) */
+  into wqx_result_taxon_habit (res_uid, habit_name_list)
+select /*+ parallel(4) */
+       result_taxon_habit.res_uid,
+       listagg(habit.habit_name, ';') within group (order by habit.habit_uid) habit_name_list
+  from wqx.result_taxon_habit
+       left join wqx.habit
+         on result_taxon_habit.habit_uid = habit.habit_uid
+    group by result_taxon_habit.res_uid;
+commit;
+select 'Building wqx_result_taxon_habit complete: ' || systimestamp from dual;
+
+prompt populating wqx_result_taxon_feeding_group
+truncate table wqx_result_taxon_feeding_group;
+insert /*+ append parallel(4) */
+  into wqx_result_taxon_feeding_group (res_uid, feeding_group_list)
+select /*+ parallel(4) */
+       res_uid,
+       listagg(rtfgrp_functional_feeding_grp, ';') within group (order by rownum) feeding_group_list
+  from wqx.result_taxon_feeding_group
+    group by res_uid;
+commit;
+select 'Building wqx_result_taxon_feeding_group complete: ' || systimestamp from dual;
+
+prompt populating wqx_attached_object_result
+truncate table wqx_attached_object_result;
+insert /*+ append parallel(4) */
+  into wqx_attached_object_result (org_uid, ref_uid, result_object_name, result_object_type)
+select /*+ parallel(4) */
+       org_uid,
+       ref_uid,
+       listagg(atobj_file_name, ';') within group (order by rownum) result_object_name,
+       listagg(atobj_type, ';') within group (order by rownum) result_object_type
+  from wqx.attached_object
+ where tbl_uid = 3
+    group by org_uid, ref_uid;
+commit;
+select 'Building wqx_attached_object_result complete: ' || systimestamp from dual;
+
+prompt populating wqx_result_lab_sample_prep_sum
+truncate table wqx_result_lab_sample_prep_sum;
+insert /*+ append parallel(4) */
+  into wqx_result_lab_sample_prep_sum (res_uid, result_lab_sample_prep_count)
+select /*+ parallel(4) */
+       res_uid,
+       count(*)
+  from wqx.result_lab_sample_prep
+    group by res_uid;
+commit;
+select 'Building wqx_result_lab_sample_prep_sum complete: ' || systimestamp from dual;
+
+prompt populating wqx_result_frequency_class
+truncate table wqx_result_frequency_class;
+insert /*+ append parallel(4) */
+  into wqx_result_frequency_class (res_uid,
+                                   one_fcdsc_name, one_msunt_cd, one_fcdsc_lower_bound, one_fcdsc_upper_bound,
+                                   two_fcdsc_name, two_msunt_cd, two_fcdsc_lower_bound, two_fcdsc_upper_bound,
+                                   three_fcdsc_name, three_msunt_cd, three_fcdsc_lower_bound, three_fcdsc_upper_bound)
+select /*+ parallel(4) */
+       *
+  from (select result_frequency_class.res_uid,
+               row_number() over (partition by res_uid order by fcdsc_name) pos,
+               frequency_class_descriptor.fcdsc_name,
+               measurement_unit.msunt_cd,
+               result_frequency_class.fcdsc_lower_bound,
+               result_frequency_class.fcdsc_upper_bound
+          from wqx.result_frequency_class
+               left join wqx.frequency_class_descriptor
+                 on result_frequency_class.fcdsc_uid = frequency_class_descriptor.fcdsc_uid
+               left join wqx.measurement_unit
+                 on result_frequency_class.msunt_uid = measurement_unit.msunt_uid
+       )
+pivot (
+       min(fcdsc_name) fcdsc_name,
+       min(msunt_cd) msunt_cd,
+       min(fcdsc_lower_bound) fcdsc_lower_bound,
+       min(fcdsc_upper_bound) fcdsc_upper_bound
+         for pos in (1 one, 2 two, 3 three)
+      );
+commit;
+select 'Building wqx_result_frequency_class complete: ' || systimestamp from dual;
+
 prompt dropping storet result indexes
 exec etl_helper_result.drop_indexes('storet');
 
@@ -106,6 +190,11 @@ truncate table result_swap_storet;
 select /*+ full(a) noparallel */ count(*) from activity_swap_storet a;
 select /*+ full(a) noparallel */ count(*) from wqx_analytical_method a;
 select /*+ full(a) noparallel */ count(*) from wqx_detection_quant_limit a;
+select /*+ full(a) noparallel */ count(*) from wqx_result_taxon_habit a;
+select /*+ full(a) noparallel */ count(*) from wqx_result_taxon_feeding_group a;
+select /*+ full(a) noparallel */ count(*) from wqx_attached_object_result a;
+select /*+ full(a) noparallel */ count(*) from wqx_result_lab_sample_prep_sum a;
+select /*+ full(a) noparallel */ count(*) from wqx_result_frequency_class a;
 
 insert /*+ append parallel(4) */
   into result_swap_storet (data_source_id, data_source, station_id, site_id, event_date, analytical_method, activity,
@@ -136,7 +225,10 @@ insert /*+ append parallel(4) */
                            analysis_end_time, analysis_end_timezone, rlcom_cd, lab_remark, detection_limit, detection_limit_unit, detection_limit_desc,
                            res_lab_accred_yn, res_lab_accred_authority, res_taxonomist_accred_yn, res_taxonomist_accred_authorty, prep_method_id, prep_method_context,
                            prep_method_name, prep_method_qual_type, prep_method_desc, analysis_prep_date_tx, prep_start_time, prep_start_timezone, prep_end_date,
-                           prep_end_time, prep_end_timezone, prep_dilution_factor)
+                           prep_end_time, prep_end_timezone, prep_dilution_factor, project_name, monitoring_location_name, result_object_name, result_object_type,
+                           result_file_url, last_updated, res_detect_qnt_lmt_url, lab_sample_prep_url, frequency_class_code_1, frequency_class_code_2, frequency_class_code_3,
+                           frequency_class_unit_1, frequency_class_unit_2, frequency_class_unit_3, frequency_class_lower_bound_1, frequency_class_lower_bound_2,
+                           frequency_class_lower_bound_3, frequency_class_upper_bound_1, frequency_class_upper_bound_2, frequency_class_upper_bound_3)
 select /*+ parallel(4) */
        activity_swap_storet.data_source_id,
        activity_swap_storet.data_source,
@@ -250,12 +342,12 @@ select /*+ parallel(4) */
        group_summ_ct_wt.msunt_cd res_group_summary_ct_wt_unit,
        cell_form.celfrm_name cell_form_name,
        cell_shape.celshp_name cell_shape_name,
-       habit.habit_name_list habit_name,
+       wqx_result_taxon_habit.habit_name_list habit_name,
        voltinism.volt_name,
        result_taxon_detail.rtdet_pollution_tolerance,
        result_taxon_detail.rtdet_pollution_tolernce_scale,
        result_taxon_detail.rtdet_trophic_level,
-       result_taxon_feeding_group.feeding_group_list rtfgrp_functional_feeding_grp,
+       wqx_result_taxon_feeding_group.feeding_group_list rtfgrp_functional_feeding_grp,
        taxon_citation.citatn_title,
        taxon_citation.citatn_creator,
        taxon_citation.citatn_subject,
@@ -300,7 +392,49 @@ select /*+ parallel(4) */
        /*result_lab_sample_prep.*/ null rlsprp_end_date,
        /*result_lab_sample_prep.*/ null rlsprp_end_time,
        /*prep_end.tmzone_cd*/ null prep_end_time,
-       /*result_lab_sample_prep.*/ null rlsprp_dilution_factor
+       /*result_lab_sample_prep.*/ null rlsprp_dilution_factor,
+       activity_swap_storet.project_name,
+       activity_swap_storet.monitoring_location_name,
+       wqx_attached_object_result.result_object_name,
+       wqx_attached_object_result.result_object_type,
+       case
+         when wqx_attached_object_result.ref_uid is null
+           then null
+         else
+           '/organizations/' ||
+               pkg_dynamic_list.url_escape(activity_swap_storet.organization, 'true') || '/activities/' ||
+               pkg_dynamic_list.url_escape(activity_swap_storet.activity, 'true') || '/results/' ||
+               pkg_dynamic_list.url_escape(activity_swap_storet.organization, 'true') || '-' ||
+               pkg_dynamic_list.url_escape(result.res_uid, 'true') || '/files'
+       end result_file_url,
+       result.res_last_change_date last_updated,
+       case 
+         when wqx_detection_quant_limit.res_uid is null
+           then null
+         else 
+           '/activities/' ||
+               pkg_dynamic_list.url_escape(activity_swap_storet.activity, 'true') || '/results/' ||
+               pkg_dynamic_list.url_escape(activity_swap_storet.organization, 'true') || '-' ||
+               pkg_dynamic_list.url_escape(result.res_uid, 'true') || '/resdetectqntlmts'
+       end res_detect_qnt_lmt_url,
+       case 
+         when wqx_result_lab_sample_prep_sum.res_uid is null
+           then null
+         else
+           null
+       end lab_sample_prep_url,
+       wqx_result_frequency_class.one_fcdsc_name frequency_class_code_1,
+       wqx_result_frequency_class.two_fcdsc_name frequency_class_code_2,
+       wqx_result_frequency_class.three_fcdsc_name frequency_class_code_3,
+       wqx_result_frequency_class.one_msunt_cd frequency_class_unit_1,
+       wqx_result_frequency_class.two_msunt_cd frequency_class_unit_2,
+       wqx_result_frequency_class.three_msunt_cd frequency_class_unit_3,
+       wqx_result_frequency_class.one_fcdsc_lower_bound frequency_class_lower_bound_1,
+       wqx_result_frequency_class.two_fcdsc_lower_bound frequency_class_lower_bound_2,
+       wqx_result_frequency_class.three_fcdsc_lower_bound frequency_class_lower_bound_3,
+       wqx_result_frequency_class.one_fcdsc_upper_bound frequency_class_upper_bound_1,
+       wqx_result_frequency_class.two_fcdsc_upper_bound frequency_class_upper_bound_2,
+       wqx_result_frequency_class.three_fcdsc_upper_bound frequency_class_upper_bound_3
   from activity_swap_storet
        join wqx.result
          on activity_swap_storet.activity_id = result.act_uid
@@ -338,12 +472,8 @@ select /*+ parallel(4) */
          on result.anlmth_uid = wqx_analytical_method.anlmth_uid
        left join wqx_detection_quant_limit
          on result.res_uid = wqx_detection_quant_limit.res_uid
-/*     left join wqx.result_lab_sample_prep
-         on result.res_uid = result_lab_sample_prep.res_uid
-       left join wqx.time_zone prep_start
-         on result_lab_sample_prep.tmzone_uid_start_time = prep_start.tmzone_uid
-       left join wqx.time_zone prep_end
-         on result_lab_sample_prep.tmzone_uid_end_time = prep_end.tmzone_uid */
+       left join wqx_result_lab_sample_prep_sum
+         on result.res_uid = wqx_result_lab_sample_prep_sum.res_uid
        left join wqx.time_zone analysis_start
          on result.tmzone_uid_lab_analysis_start = analysis_start.tmzone_uid
        left join wqx.time_zone analysis_end
@@ -356,34 +486,25 @@ select /*+ parallel(4) */
          on result.rlcom_uid = result_lab_comment.rlcom_uid
        left join storetw.di_characteristic
          on characteristic.chr_storet_id = di_characteristic.pk_isn
-       left join (select result_taxon_habit.res_uid,
-                         listagg(habit.habit_name, ';') within group (order by habit.habit_uid) habit_name_list
-                    from wqx.result_taxon_habit
-                         left join wqx.habit
-                           on result_taxon_habit.habit_uid = habit.habit_uid
-                       group by result_taxon_habit.res_uid) habit
-         on result.res_uid = habit.res_uid
+       left join wqx_result_taxon_habit
+         on result.res_uid = wqx_result_taxon_habit.res_uid
        left join wqx.result_taxon_detail
          on result.res_uid = result_taxon_detail.res_uid
        left join wqx.voltinism
          on result_taxon_detail.volt_uid = voltinism.volt_uid
-       left join (select res_uid,
-                         listagg(rtfgrp_functional_feeding_grp, ';') within group (order by rownum) feeding_group_list
-                    from wqx.result_taxon_feeding_group
-                      group by res_uid) result_taxon_feeding_group
-         on result.res_uid = result_taxon_feeding_group.res_uid
+       left join wqx_result_taxon_feeding_group
+         on result.res_uid = wqx_result_taxon_feeding_group.res_uid
        left join wqx.citation taxon_citation
          on result_taxon_detail.citatn_uid = taxon_citation.citatn_uid
        left join wqx.cell_form
          on result_taxon_detail.celfrm_uid = cell_form.celfrm_uid
        left join wqx.cell_shape
          on result_taxon_detail.celshp_uid = cell_shape.celshp_uid
-/*       left join wqx.result_frequency_class
-         on result.res_uid = result_frequency_class.res_uid
-       left join wqx.frequency_class_descriptor
-         on result_frequency_class.fcdsc_uid = frequency_class_descriptor.fcdsc_uid
-       left join wqx.measurement_unit result_frequency
-         on result_frequency_class.msunt_uid = result_frequency.msunt_uid */
+       left join wqx_attached_object_result
+         on result.org_uid = wqx_attached_object_result.org_uid and
+            result.res_uid = wqx_attached_object_result.ref_uid
+       left join wqx_result_frequency_class
+         on result.res_uid = wqx_result_frequency_class.res_uid
  where result.ressta_uid != 4;
 commit;
 select 'Building result_swap_storet from wqx complete: ' || systimestamp from dual;
