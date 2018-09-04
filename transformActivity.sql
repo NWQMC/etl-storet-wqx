@@ -84,7 +84,7 @@ select /*+ parallel(4) */
        'STORET' data_source,
        activity.mloc_uid station_id, 
        station.site_id,
-       station.station_name
+       station.station_name,
        trunc(activity.act_start_date) event_date,
        station.organization || '-' || activity.act_id activity,
        activity_media.acmed_name sample_media,
