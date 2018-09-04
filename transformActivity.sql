@@ -8,10 +8,11 @@ select 'transform activity start time: ' || systimestamp from dual;
 
 prompt populating wqx_activity_project
 truncate table wqx_activity_project;
-insert /*+ append parallel(4) */ into wqx_activity_project (act_uid, project_id_list)
-select /*+ parallel(4) */ 
+insert /*+ append parallel(4) */ into wqx_activity_project (act_uid, project_id_list, project_name_list)
+select /*+ parallel(4) */
        activity_project.act_uid,
-       listagg(project.prj_id, ';') within group (order by project.prj_id) project_id_list
+       listagg(project.prj_id, ';') within group (order by project.prj_id) project_id_list,
+       listagg(project.project_name, ';') within group (order by project.prj_id) project_name_list
   from wqx.activity_project
        left join wqx.project
          on activity_project.prj_uid = project.prj_uid
@@ -19,17 +20,53 @@ select /*+ parallel(4) */
 commit;
 select 'Building wqx_actvity_project complete: ' || systimestamp from dual;
 
+prompt populating wqx_activity_conducting_org
+truncate table wqx_activity_conducting_org;
+insert  /*+ append parallel(4) */ into wqx_activity_conducting_org (act_uid, acorg_name_list)
+select /*+ parallel(4) */
+       act_uid,
+       listagg(acorg_name, ';') within group (order by rownum) acorg_name_list
+  from wqx.activity_conducting_org
+    group by act_uid);
+commit;
+select 'Building wqx_activity_conducting_org complete: ' || systimestamp from dual;
+
+prompt populating wqx_attached_object_activity
+truncate table wqx_attached_object_activity;
+insert /*+ append parallel(4) */ into wqx_attached_object_activity (org_uid, ref_uid, activity_object_name, activity_object_type)
+select /*+ parallel(4) */
+       org_uid,
+       ref_uid,
+       listagg(atobj_file_name, ';') within group (order by rownum) activity_object_name,
+       listagg(atobj_type, ';') within group (order by rownum) activity_object_type
+  from wqx.attached_object
+ where tbl_uid = 3
+    group by org_uid, ref_uid);
+commit;
+select 'Building wqx_attached_object_activity complete: ' || systimestamp from dual;
+
+prompt populating wqx_activity_metric_sum
+truncate table wqx_activity_metric_sum;
+insert /*+ append parallel(4) */ into wqx_activity_metric_sum (act_uid, activity_metric_count)
+select /*+ parallel(4) */
+       act_uid,
+       count(*) activity_metric_count
+  from wqx.activity_metric
+    group by act_uid;
+commit;
+select 'Building wqx_activity_metric_sum complete: ' || systimestamp from dual;
+
 prompt dropping storet activity indexes
 exec etl_helper_activity.drop_indexes('storet');
 
 prompt populating activity_swap_storet
 truncate table activity_swap_storet;
 insert /*+ append parallel(4) */
-  into activity_swap_storet (data_source_id, data_source, station_id, site_id, event_date, activity, sample_media, organization, site_type, huc, governmental_unit_code,
+  into activity_swap_storet (data_source_id, data_source, station_id, site_id, station_name, event_date, activity, sample_media, organization, site_type, huc, governmental_unit_code,
                              organization_name, activity_id, activity_type_code, activity_media_subdiv_name, activity_start_time, act_start_time_zone,
                              activity_stop_date, activity_stop_time, act_stop_time_zone, activity_relative_depth_name, activity_depth,
                              activity_depth_unit, activity_depth_ref_point, activity_upper_depth, activity_upper_depth_unit, activity_lower_depth,
-                             activity_lower_depth_unit, project_id, activity_conducting_org, activity_comment, activity_latitude, activity_longitude,
+                             activity_lower_depth_unit, project_id, project_name, activity_conducting_org, activity_comment, activity_latitude, activity_longitude,
                              activity_source_map_scale, act_horizontal_accuracy, act_horizontal_accuracy_unit, act_horizontal_collect_method,
                              act_horizontal_datum_name, assemblage_sampled_name, act_collection_duration, act_collection_duration_unit,
                              act_sam_compnt_name, act_sam_compnt_place_in_series, act_reach_length, act_reach_length_unit, act_reach_width,
@@ -46,6 +83,7 @@ select /*+ parallel(4) */
        'STORET' data_source,
        activity.mloc_uid station_id, 
        station.site_id,
+       station.station_name
        trunc(activity.act_start_date) event_date,
        station.organization || '-' || activity.act_id activity,
        activity_media.acmed_name sample_media,
@@ -71,10 +109,11 @@ select /*+ parallel(4) */
        activity.act_depth_height_bottom activity_lower_depth,
        b_measurement_unit.msunt_cd activity_lower_depth_unit,
        wqx_activity_project.project_id_list project_id,
-       activity_conducting_org.acorg_name_list activity_conducting_org,
+       wqx_activity_project.project_name_list project_name,
+       wqx_activity_conducting_org.acorg_name_list activity_conducting_org,
        activity.act_comments activity_comment,
-       activity.act_loc_latitude activity_latitude,
-       activity.act_loc_longitude activity_longitude,
+       nvl(activity.act_loc_latitude, station.latitude) activity_latitude,
+       nvl(activity.act_loc_longitude, station.longitude) activity_longitude,
        activity.act_loc_source_map_scale activity_source_map_scale,
        activity.act_horizontal_accuracy,
        activity_horizontal_unit.msunt_cd act_horizontal_accuracy_unit,
@@ -132,10 +171,10 @@ select /*+ parallel(4) */
        activity.act_sam_chemical_preservative,
        thermal_preservative.thprsv_name thermal_preservative_name,
        activity.act_sam_transport_storage_desc,
-       attached_object.activity_object_name,
-       attached_object.activity_object_type,
+       wqx_attached_object_activity.activity_object_name,
+       wqx_attached_object_activity.activity_object_type,
        case
-         when attached_object.ref_uid is null
+         when wqx_attached_object_activity.ref_uid is null
            then null
          else
            '/organizations/' ||
@@ -144,22 +183,20 @@ select /*+ parallel(4) */
                pkg_dynamic_list.url_escape(activity.act_id, 'true') || '/files'
        end activity_file_url,
        case
-         when (select count(*) from wqx.activity_metric where activity.act_uid = activity_metric.act_uid) > 0
-           then '/activities/' ||
-                   pkg_dynamic_list.url_escape(station.organization, 'true') || '-' ||
-                   pkg_dynamic_list.url_escape(activity.act_id, 'true') || '/activitymetrics'
-         else null
+         when wqx_activity_metric_sum.act_uid is null
+           then null
+           else
+             '/activities/' ||
+               pkg_dynamic_list.url_escape(station.organization, 'true') || '-' ||
+               pkg_dynamic_list.url_escape(activity.act_id, 'true') || '/activitymetrics'
        end activity_metric_url
   from wqx.activity
        join station_swap_storet station
          on activity.mloc_uid = station.station_id
        left join wqx.sample_collection_equip
          on activity.sceqp_uid = sample_collection_equip.sceqp_uid
-       left join (select act_uid,
-                         listagg(acorg_name, ';') within group (order by rownum) acorg_name_list
-                    from wqx.activity_conducting_org
-                      group by act_uid) activity_conducting_org
-         on activity.act_uid = activity_conducting_org.act_uid
+       left join wqx_activity_conducting_org
+         on activity.act_uid = wqx_activity_conducting_org.act_uid
        left join wqx_activity_project
          on activity.act_uid = wqx_activity_project.act_uid
        left join wqx.measurement_unit b_measurement_unit
@@ -214,16 +251,11 @@ select /*+ parallel(4) */
          on activity.thprsv_uid = thermal_preservative.thprsv_uid
        left join wqx.relative_depth
          on activity.reldpth_uid = relative_depth.reldpth_uid
-       left join (select org_uid,
-                         ref_uid,
-                         listagg(atobj_file_name, ';') within group (order by rownum) activity_object_name,
-                         listagg(atobj_type, ';') within group (order by rownum) activity_object_type
-                    from wqx.attached_object
-                   where tbl_uid = 3
-                      group by org_uid, ref_uid) attached_object
-         on activity.org_uid = attached_object.org_uid and
-            activity.act_uid = attached_object.ref_uid;
-
+       left join wqx_attached_object_activity
+         on activity.org_uid = wqx_attached_object_activity.org_uid and
+            activity.act_uid = wqx_attached_object_activity.ref_uid
+       left join wqx_activity_metric_sum
+         on activity.act_uid = wqx_activity_metric_sum.act_uid;
 commit;
 select 'Building activity_swap_storet complete: ' || systimestamp from dual;
 
