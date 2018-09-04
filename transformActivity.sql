@@ -63,7 +63,7 @@ exec etl_helper_activity.drop_indexes('storet');
 prompt populating activity_swap_storet
 truncate table activity_swap_storet;
 insert /*+ append parallel(4) */
-  into activity_swap_storet (data_source_id, data_source, station_id, site_id, station_name, event_date, activity, sample_media, organization, site_type, huc, governmental_unit_code,
+  into activity_swap_storet (data_source_id, data_source, station_id, site_id, monitoring_location_name, event_date, activity, sample_media, organization, site_type, huc, governmental_unit_code,
                              organization_name, activity_id, activity_type_code, activity_media_subdiv_name, activity_start_time, act_start_time_zone,
                              activity_stop_date, activity_stop_time, act_stop_time_zone, activity_relative_depth_name, activity_depth,
                              activity_depth_unit, activity_depth_ref_point, activity_upper_depth, activity_upper_depth_unit, activity_lower_depth,
