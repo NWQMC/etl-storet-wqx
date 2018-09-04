@@ -28,7 +28,7 @@ select /*+ parallel(4) */
        act_uid,
        listagg(acorg_name, ';') within group (order by rownum) acorg_name_list
   from wqx.activity_conducting_org
-    group by act_uid);
+    group by act_uid;
 commit;
 select 'Building wqx_activity_conducting_org complete: ' || systimestamp from dual;
 
@@ -42,7 +42,7 @@ select /*+ parallel(4) */
        listagg(atobj_type, ';') within group (order by rownum) activity_object_type
   from wqx.attached_object
  where tbl_uid = 3
-    group by org_uid, ref_uid);
+    group by org_uid, ref_uid;
 commit;
 select 'Building wqx_attached_object_activity complete: ' || systimestamp from dual;
 
