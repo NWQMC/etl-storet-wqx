@@ -133,7 +133,7 @@ select /*+ parallel(4) */
        listagg(atobj_file_name, ';') within group (order by rownum) result_object_name,
        listagg(atobj_type, ';') within group (order by rownum) result_object_type
   from wqx.attached_object
- where tbl_uid = 3
+ where tbl_uid = 5
     group by org_uid, ref_uid;
 commit;
 select 'Building wqx_attached_object_result complete: ' || systimestamp from dual;
