@@ -32,6 +32,7 @@ tables=(
 	habit,
 	horizontal_collection_method,
 	horizontal_reference_datum,
+	index_type,
 	measurement_unit,
 	method_speciation,
 	metric_type,
