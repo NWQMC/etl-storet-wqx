@@ -79,8 +79,6 @@ insert /*+ append parallel(4) */
                                  sampling_design_type_code,
                                  qapp_approved_indicator,
                                  qapp_approval_agency_name
---                                 ,
---                                 project_file_url
                                 )
 select 3 data_source_id,
        di_project.pk_isn + 100000000000 project_id,
@@ -93,12 +91,6 @@ select 3 data_source_id,
        di_project.sampling_design_type_cd,
        di_project.qa_approved qapp_approved_indicator,
        di_project.qa_approval_agency qapp_approval_agency_name
---       ,
---       case 
---         when di_project.blob_id is not null
---           then '/organizations/' || pkg_dynamic_list.url_escape(di_org.organization_id, 'true') || '/projects/' || pkg_dynamic_list.url_escape(di_project.project_cd, 'true') || '/files'
---         else null
---       end project_file_url
   from storetw.di_project
        join storetw.di_org
          on di_project.fk_org = di_org.pk_isn
