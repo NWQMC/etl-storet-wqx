@@ -94,7 +94,8 @@ select 3 data_source_id,
   from storetw.di_project
        join storetw.di_org
          on di_project.fk_org = di_org.pk_isn
- where di_project.tsmproj_org_id not in (select org_id from wqp_core.storetw_transition);
+ where di_project.tsmproj_org_id not in (select org_id from wqp_core.storetw_transition) and
+       lnnvl(di_project.source_system = 'WQX');
 
 commit;
 select 'Building storetw project_data complete: ' || systimestamp from dual;
