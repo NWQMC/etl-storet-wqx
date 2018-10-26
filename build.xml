@@ -119,6 +119,14 @@
         </exec>
     </target>
 
+    <target name="transformBiologocalHabitatMetric">
+        <echo>Transform the Result Data</echo>
+        <exec executable="sqlplus" failonerror="true">
+            <arg value="wqp_core/${wqp_core_password}@${instance}"/>
+            <arg value="@${basedir}/transformBiologocalHabitatMetric.sql"/>
+        </exec>
+    </target>
+
     <target name="transformActivity">
         <echo>Transform the Result Data</echo>
         <exec executable="sqlplus" failonerror="true">
