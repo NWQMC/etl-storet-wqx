@@ -76,7 +76,7 @@
     </target>
 
     <target name="batch">
-        <java jar="app.jar"/>
+        <java jar="app.jar" fork="true"/>
     </target>
 
 	<target name="dropRI">
