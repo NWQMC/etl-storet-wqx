@@ -77,7 +77,7 @@
 
     <target name="batch">
         <java jar="app.jar" fork="true" failonerror="true">
-            <sysproperty key="spring-boot.run.arguments" value="datasource=STORET"/>
+            <arg value="spring-boot.run.arguments=-datasource=STORET"/>
             <sysproperty key="app.datasource.wqp.url" value="jdbc:oracle:thin:@152.61.236.135:1521:devnolog"/>
             <sysproperty key="app.datasource.wqp.username" value="wqp_core"/>
             <sysproperty key="app.datasource.wqp.password" value="${wqp_core_password}"/>
