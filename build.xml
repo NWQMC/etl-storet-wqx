@@ -78,12 +78,12 @@
     <target name="batch">
         <java jar="app.jar" fork="true" failonerror="true">
             <arg value="-Dspring-boot.run.arguments=-datasource=STORET"/>
-            <sysproperty key="-Dapp.datasource.wqp.url" value="jdbc:oracle:thin:@152.61.236.135:1521:devnolog"/>
-            <sysproperty key="-Dapp.datasource.wqp.username" value="wqp_core"/>
-            <sysproperty key="-Dapp.datasource.wqp.password" value="${wqp_core_password}"/>
-            <sysproperty key="-Dapp.datasource.nemi.url" value="jdbc:oracle:thin:@152.61.236.135:1521:devnolog"/>
-            <sysproperty key="-Dapp.datasource.nemi.username" value="nemi_data"/>
-            <sysproperty key="-Dapp.datasource.nemi.password" value="${nemi_data_password}"/>
+            <sysproperty key="-app.datasource.wqp.url" value="jdbc:oracle:thin:@152.61.236.135:1521:devnolog"/>
+            <sysproperty key="-app.datasource.wqp.username" value="wqp_core"/>
+            <sysproperty key="-app.datasource.wqp.password" value="${wqp_core_password}"/>
+            <sysproperty key="-app.datasource.nemi.url" value="jdbc:oracle:thin:@152.61.236.135:1521:devnolog"/>
+            <sysproperty key="-app.datasource.nemi.username" value="nemi_data"/>
+            <sysproperty key="-app.datasource.nemi.password" value="${nemi_data_password}"/>
         </java>
     </target>
 
