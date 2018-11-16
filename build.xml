@@ -1,4 +1,4 @@
-<project name="QwStoretWqxEtl" default="default">
+<project name="QwStoretWqxEtl" default="default" basedir=".">
 	<property name="work.dir" value="/pdc/wqp_data" />
 
     <!-- default and it's depends are the normal automated full ETL. -->
@@ -71,7 +71,15 @@
 
     <!-- The rest of these are if you want to run the ETL step-by-step manually. --> 
 
-    <target name="dropRI">
+    <target name="dependencies">
+        <get src="http://internal.cida.usgs.gov/maven/service/local/repositories/cida-qw-snapshots/content/gov/acwi/wqp-etl-base/0.0.1-SNAPSHOT/wqp-etl-base-0.0.1-20181116.161516-1.jar" dest="app.jar" usetimestamp="true" />
+    </target>
+
+    <target name="batch">
+        <java jar="app.jar"/>
+    </target>
+
+	<target name="dropRI">
         <echo>Drop the RI</echo>
         <exec executable="sqlplus" failonerror="true">
             <arg value="wqp_core/${wqp_core_password}@${instance}"/>
