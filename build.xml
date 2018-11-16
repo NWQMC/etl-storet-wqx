@@ -76,7 +76,15 @@
     </target>
 
     <target name="batch">
-        <java jar="app.jar" fork="true"/>
+        <java jar="app.jar" fork="true" failonerror="true">
+            <arg value="-Dspring-boot.run.arguments=-datasource=STORET"/>
+            <arg value="-Dapp.datasource.wqp.url=jdbc:oracle:thin:@152.61.236.135:1521:devnolog"/>
+            <arg value="-Dapp.datasource.wqp.username=wqp_core"/>
+            <arg value="-Dapp.datasource.wqp.password=${wqp_core_password}"/>
+            <arg value="-Dapp.datasource.nemi.url=jdbc:oracle:thin:@152.61.236.135:1521:devnolog"/>
+            <arg value="-Dapp.datasource.nemi.username=nemi_data"/>
+            <arg value="-Dapp.datasource.nemi.password=${nemi_data_password}"/>
+        </java>
     </target>
 
 	<target name="dropRI">
