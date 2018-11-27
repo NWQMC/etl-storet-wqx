@@ -36,6 +36,7 @@ grant select on frequency_class_descriptor to wqp_core;
 grant select on habit to wqp_core;
 grant select on horizontal_collection_method to wqp_core;
 grant select on horizontal_reference_datum to wqp_core;
+grant select on index_type to wqp_core;
 grant select on measurement_unit to wqp_core;
 grant select on method_speciation to wqp_core;
 grant select on metric_type to wqp_core;
