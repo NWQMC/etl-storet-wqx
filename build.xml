@@ -74,7 +74,7 @@
     <!-- The rest of these are if you want to run the ETL step-by-step manually. --> 
 
     <target name="dependencies">
-        <get src="http://internal.cida.usgs.gov/maven/service/local/repositories/cida-qw-snapshots/content/gov/acwi/wqp-etl-base/${app_jar}" dest="app.jar" usetimestamp="true" />
+        <get src="${app_jar_url}" dest="app.jar" usetimestamp="true" />
     </target>
 
     <target name="batchTransformAndLoadData">
