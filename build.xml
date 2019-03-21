@@ -3,6 +3,17 @@
 
     <!-- batch and it's depends are the normal automated full ETL. -->
 
+    <target name="finishETL" depends="setStopRun" unless="stopRun">
+        <echo>Runs the finishing script at ${storet_host}</echo>
+        <sshexec host="${storet_host}"
+            trust="true"
+            failonerror="true"
+            username="storet_user"
+            password="${storet_user_password}"
+            command="bash -e -x ${work.dir}/wqx_finish.sh ${dbFolder}"
+        />
+    </target>
+
     <target name="batch" depends="scpScript, dos2unix, extractData, importData, grantAndAnalyzeWqxTables, dependencies, batchTransformAndLoadData, finishETL"/>
 
     <target name="scpScript">
@@ -68,15 +79,22 @@
         <get src="http://internal.cida.usgs.gov/maven/service/local/repositories/cida-qw-snapshots/content/gov/acwi/wqp-etl-base/${app_jar}" dest="app.jar" usetimestamp="true" />
     </target>
 
-    <target name="batchTransformAndLoadData">
+    <target name="batchTransformAndLoadData" depends="extractData" unless="batch">
+        <!-- Load the properties file now because the extractData task creates the properties file. -->
+        <property file="job.id.date.properties" /> <!-- not sure is properties can be loaded here. -->
         <java jar="app.jar" fork="true" failonerror="true">
             <arg value="datasource=STORET"/>
-            <sysproperty key="app.datasource.wqp.url" value="${wqpUrl}"/>
+            <arg value="&quot;${job.id.date}&quot;"/>
+            <sysproperty key="app.job.id.date" value="${job.id.date}"/>
+            <sysproperty key="app.datasource.name" value="STORET"/>
+
             <sysproperty key="app.datasource.wqp.username" value="wqp_core"/>
             <sysproperty key="app.datasource.wqp.password" value="${wqp_core_password}"/>
-            <sysproperty key="app.datasource.nemi.url" value="${nemiUrl}"/>
+            <sysproperty key="app.datasource.wqp.url" value="${wqpUrl}"/>
+
             <sysproperty key="app.datasource.nemi.username" value="nemi_data"/>
             <sysproperty key="app.datasource.nemi.password" value="${nemi_data_password}"/>
+            <sysproperty key="app.datasource.nemi.url" value="${nemiUrl}"/>
         </java>
     </target>
 
@@ -88,15 +106,5 @@
         </exec>
     </target>
 
-    <target name="finishETL" depends="setStopRun" unless="stopRun">
-        <echo>Runs the finishing script at ${storet_host}</echo>
-        <sshexec host="${storet_host}"
-            trust="true"
-            failonerror="true"
-            username="storet_user"
-            password="${storet_user_password}"
-            command="bash -e -x ${work.dir}/wqx_finish.sh ${dbFolder}"
-        />
-    </target>
 
 </project>

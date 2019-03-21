@@ -34,8 +34,18 @@ function stop_ok() {
 }
 
 # output of this script is used as the job id in the spring batch process
+# In order to pass the value to Ant, this will create a properties file.
 function stop_with_job_id() {
-	echo grep -Po '\w+\s\d{2}\s\d{2}:\d{2}:\d{2}\s\d{4}' ${EXPORT_LOG} | tail -1
+    # First, create the properties file with the parameter name in it.
+    # The parameter (-n) ensure no line feed after the parameter name.
+    echo -n "job.id.date=" > job.id.date.properties
+
+    # Extract the date from the log file using Perl RegEx (-P) and only output (-o) the match
+    # The tail command returns only the last match, while tee outputs to stdout and the file.
+    # The tail must append (-a) to the properties file to preserve the property name.
+	grep -Po '\w+\s\d{2}\s\d{2}:\d{2}:\d{2}\s\d{4}' ${EXPORT_LOG} | tail -1 | tee -a job.id.date.properties
+
+    # Unix success exit code
 	exit 0
 }
 
