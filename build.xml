@@ -1,5 +1,6 @@
 <project name="QwStoretWqxEtl" default="batch" basedir=".">
 	<property name="work.dir" value="/pdc/wqp_data" />
+	<property name="jobId.file" value="job.id.date.properties"/>
 
     <!-- batch and it's depends are the normal automated full ETL. -->
 
@@ -14,7 +15,7 @@
         />
     </target>
 
-    <target name="batch" depends="scpScript, dos2unix, extractData, importData, grantAndAnalyzeWqxTables, dependencies, batchTransformAndLoadData, finishETL"/>
+    <target name="batch" depends="scpScript, dos2unix, extractData, scpProperties, importData, grantAndAnalyzeWqxTables, dependencies, batchTransformAndLoadData, finishETL"/>
 
     <target name="scpScript">
         <echo>Copy the script to ${storet_host}</echo>
@@ -56,6 +57,11 @@
         </condition>
     </target>
 
+    <target name="scpProperties" depends="setStopRun" unless="stopRun">
+        <echo>Copy the job ID properties file from ${storet_host}</echo>
+    	<scp file="storet_user:${storet_user_password}@${storet_host}:${work.dir}/${jobId.file}" todir="."/>
+    </target>
+    	
     <target name="importData" depends="setStopRun" unless="stopRun">
         <echo>Using impdp to load the wqp schema in ${instance}</echo>
         <exec executable="/usr/oracle/app/oracle/product/11.2.0/client_1/bin/impdp" failonerror="true">
@@ -79,13 +85,13 @@
         <get src="http://internal.cida.usgs.gov/maven/service/local/repositories/cida-qw-snapshots/content/gov/acwi/wqp-etl-base/${app_jar}" dest="app.jar" usetimestamp="true" />
     </target>
 
-    <target name="batchTransformAndLoadData" depends="extractData" unless="batch">
+    <target name="batchTransformAndLoadData">
         <!-- Load the properties file now because the extractData task creates the properties file. -->
-        <property file="job.id.date.properties" /> <!-- not sure is properties can be loaded here. -->
+        <property file="${jobId.file}" /> <!-- not sure is properties can be loaded here. -->
         <java jar="app.jar" fork="true" failonerror="true">
-            <arg value="datasource=STORET"/>
-            <arg value="&quot;${job.id.date}&quot;"/>
-            <sysproperty key="app.job.id.date" value="${job.id.date}"/>
+            <arg value="datasource=STORET"/> <!-- this is and unsued argument - it's a const -->
+            <arg value="&quot;${job.id.date}&quot;"/> <!-- this is a test to see if quoting params works -->
+            <sysproperty key="app.job.id.date" value="${job.id.date}"/> <!-- fall back to system property -->
             <sysproperty key="app.datasource.name" value="STORET"/>
 
             <sysproperty key="app.datasource.wqp.username" value="wqp_core"/>
