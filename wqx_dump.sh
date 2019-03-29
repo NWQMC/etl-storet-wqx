@@ -33,6 +33,12 @@ function stop_ok() {
 	exit 0
 }
 
+# output of this script is used as the job id in the spring batch process
+function stop_with_job_id() {
+	echo grep -Po '\w+\s\d{2}\s\d{2}:\d{2}:\d{2}\s\d{4}' ${EXPORT_LOG} | tail -1
+	exit 0
+}
+
 # set so if any command in a piped sequence returns a non-zero error code, the script fails
 set -o pipefail
 
@@ -83,3 +89,6 @@ comm -13 <(grep -o ${DUMP_FILE_GREP} ${EXPORT_LOG}) <(ls | grep ${CLEAN_UP_GREP}
 
 # download any dump files newer on remote than they are on local
 grep -o ${DUMP_FILE_GREP} ${EXPORT_LOG} | sed -e 's/^/http:\/\/www.epa.gov\/storet\/download\/storetw\//' | xargs -n 1 -P 12 wget -Nq
+
+# we have new data downloaded, so export the rundate
+stop_with_job_id

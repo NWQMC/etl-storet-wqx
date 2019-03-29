@@ -1,11 +1,9 @@
-<project name="QwStoretWqxEtl" default="default" basedir=".">
+<project name="QwStoretWqxEtl" default="batch" basedir=".">
 	<property name="work.dir" value="/pdc/wqp_data" />
 
-    <!-- default and it's depends are the normal automated full ETL. -->
+    <!-- batch and it's depends are the normal automated full ETL. -->
 
-    <target name="default" depends="scpScript, dos2unix, extractData, importData, grantAndAnalyzeWqxTables, transformAndLoadData, finishETL"/>
-
-    <target name="batch" depends="scpScript, dos2unix, extractData, importData, grantAndAnalyzeWqxTables, batchTransformAndLoadData, finishETL"/>
+    <target name="batch" depends="scpScript, dos2unix, extractData, importData, grantAndAnalyzeWqxTables, dependencies, batchTransformAndLoadData, finishETL"/>
 
     <target name="scpScript">
         <echo>Copy the script to ${storet_host}</echo>
@@ -63,13 +61,6 @@
         </exec>
     </target>
 
-    <target name="transformAndLoadData" depends="setStopRun" unless="stopRun">
-        <echo>Running the main ETL Package</echo>
-        <exec executable="sqlplus" failonerror="true">
-            <arg value="wqp_core/${wqp_core_password}@${instance}"/>
-            <arg value="@${basedir}/transformAndLoadData.sql"/>
-        </exec>
-    </target>
 
     <!-- The rest of these are if you want to run the ETL step-by-step manually. --> 
 
@@ -87,158 +78,6 @@
             <sysproperty key="app.datasource.nemi.username" value="nemi_data"/>
             <sysproperty key="app.datasource.nemi.password" value="${nemi_data_password}"/>
         </java>
-    </target>
-
-	<target name="dropRI">
-        <echo>Drop the RI</echo>
-        <exec executable="sqlplus" failonerror="true">
-            <arg value="wqp_core/${wqp_core_password}@${instance}"/>
-            <arg value="@${basedir}/dropRI.sql"/>
-        </exec>
-    </target>
-
-    <target name="transformOrgData">
-        <echo>Transform the Project Data</echo>
-        <exec executable="sqlplus" failonerror="true">
-            <arg value="wqp_core/${wqp_core_password}@${instance}"/>
-            <arg value="@${basedir}/transformOrgData.sql"/>
-        </exec>
-    </target>
-
-    <target name="transformProject">
-        <echo>Transform the Project Data</echo>
-        <exec executable="sqlplus" failonerror="true">
-            <arg value="wqp_core/${wqp_core_password}@${instance}"/>
-            <arg value="@${basedir}/transformProject.sql"/>
-        </exec>
-    </target>
-
-    <target name="transformProjectObject">
-        <echo>Transform the Project Object Data</echo>
-        <exec executable="sqlplus" failonerror="true">
-            <arg value="wqp_core/${wqp_core_password}@${instance}"/>
-            <arg value="@${basedir}/transformProjectObject.sql"/>
-        </exec>
-    </target>
-
-    <target name="transformStation">
-        <echo>Transform the Station Data</echo>
-        <exec executable="sqlplus" failonerror="true">
-            <arg value="wqp_core/${wqp_core_password}@${instance}"/>
-            <arg value="@${basedir}/transformStation.sql"/>
-        </exec>
-    </target>
-
-    <target name="transformStationObject">
-        <echo>Transform the Result Data</echo>
-        <exec executable="sqlplus" failonerror="true">
-            <arg value="wqp_core/${wqp_core_password}@${instance}"/>
-            <arg value="@${basedir}/transformStationObject.sql"/>
-        </exec>
-    </target>
-
-    <target name="transformBiologocalHabitatMetric">
-        <echo>Transform the Result Data</echo>
-        <exec executable="sqlplus" failonerror="true">
-            <arg value="wqp_core/${wqp_core_password}@${instance}"/>
-            <arg value="@${basedir}/transformBiologocalHabitatMetric.sql"/>
-        </exec>
-    </target>
-
-    <target name="transformActivity">
-        <echo>Transform the Result Data</echo>
-        <exec executable="sqlplus" failonerror="true">
-            <arg value="wqp_core/${wqp_core_password}@${instance}"/>
-            <arg value="@${basedir}/transformActivity.sql"/>
-        </exec>
-    </target>
-
-    <target name="transformActivityMetric">
-        <echo>Transform the Result Data</echo>
-        <exec executable="sqlplus" failonerror="true">
-            <arg value="wqp_core/${wqp_core_password}@${instance}"/>
-            <arg value="@${basedir}/transformActivityMetric.sql"/>
-        </exec>
-    </target>
-
-    <target name="transformActivityObject">
-        <echo>Transform the Result Data</echo>
-        <exec executable="sqlplus" failonerror="true">
-            <arg value="wqp_core/${wqp_core_password}@${instance}"/>
-            <arg value="@${basedir}/transformActivityObject.sql"/>
-        </exec>
-    </target>
-
-    <target name="transformResult">
-        <echo>Transform the Result Data</echo>
-        <exec executable="sqlplus" failonerror="true">
-            <arg value="wqp_core/${wqp_core_password}@${instance}"/>
-            <arg value="@${basedir}/transformResult.sql"/>
-        </exec>
-    </target>
-
-    <target name="transformResDetectQntLmt">
-        <echo>Transform the Result Data</echo>
-        <exec executable="sqlplus" failonerror="true">
-            <arg value="wqp_core/${wqp_core_password}@${instance}"/>
-            <arg value="@${basedir}/transformResDetectQntLmt.sql"/>
-        </exec>
-    </target>
-
-    <target name="transformProjectMLWeighting">
-        <echo>Transform the Project ML Weighting Data</echo>
-        <exec executable="sqlplus" failonerror="true">
-            <arg value="wqp_core/${wqp_core_password}@${instance}"/>
-            <arg value="@${basedir}/transformProjectMLWeighting.sql"/>
-        </exec>
-    </target>
-
-    <target name="transformResultObject">
-        <echo>Transform the Result Data</echo>
-        <exec executable="sqlplus" failonerror="true">
-            <arg value="wqp_core/${wqp_core_password}@${instance}"/>
-            <arg value="@${basedir}/transformResultObject.sql"/>
-        </exec>
-    </target>
-
-    <target name="createSummaries">
-        <echo>Create the Summary Tables</echo>
-        <exec executable="sqlplus" failonerror="true">
-            <arg value="wqp_core/${wqp_core_password}@${instance}"/>
-            <arg value="@${basedir}/createSummaries.sql"/>
-        </exec>
-    </target>
-
-    <target name="createCodes">
-        <echo>Create the Code Lookup Tables</echo>
-        <exec executable="sqlplus" failonerror="true">
-            <arg value="wqp_core/${wqp_core_password}@${instance}"/>
-            <arg value="@${basedir}/createCodes.sql"/>
-        </exec>
-    </target>
-
-    <target name="addRI">
-        <echo>Add back the RI</echo>
-        <exec executable="sqlplus" failonerror="true">
-            <arg value="wqp_core/${wqp_core_password}@${instance}"/>
-            <arg value="@${basedir}/addRI.sql"/>
-        </exec>
-    </target>
-
-    <target name="analyze">
-        <echo>Analyze the New Data</echo>
-        <exec executable="sqlplus" failonerror="true">
-            <arg value="wqp_core/${wqp_core_password}@${instance}"/>
-            <arg value="@${basedir}/analyze.sql"/>
-        </exec>
-    </target>
-
-    <target name="validate">
-        <echo>Validate the ETL Process</echo>
-        <exec executable="sqlplus" failonerror="true">
-            <arg value="wqp_core/${wqp_core_password}@${instance}"/>
-            <arg value="@${basedir}/validate.sql"/>
-        </exec>
     </target>
 
     <target name="install">
