@@ -65,7 +65,7 @@
     <!-- The rest of these are if you want to run the ETL step-by-step manually. --> 
 
     <target name="dependencies">
-        <get src="${app_jar_url}" dest="app.jar" usetimestamp="true" />
+        <get src="${batchVersion_ARTIFACT_URL}" dest="app.jar" usetimestamp="true" />
     </target>
 
     <target name="batchTransformAndLoadData">
