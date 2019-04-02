@@ -5,7 +5,7 @@
 
     <target name="default" depends="scpScript, dos2unix, extractData, importData, grantAndAnalyzeWqxTables, dependencies, transformAndLoadData, finishETL"/>
 
-    <target name="batch" depends="scpScript, dos2unix, extractData, importData, grantAndAnalyzeWqxTables, batchTransformAndLoadData, finishETL"/>
+    <target name="batch" depends="scpScript, dos2unix, extractData, importData, grantAndAnalyzeWqxTables, dependencies, batchTransformAndLoadData, finishETL"/>
 
     <target name="scpScript">
         <echo>Copy the script to ${storet_host}</echo>
