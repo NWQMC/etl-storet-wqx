@@ -59,7 +59,7 @@
 
     <target name="scpProperties" depends="setStopRun" unless="stopRun">
         <echo>Copy the job ID properties file from ${storet_host}</echo>
-    	<scp file="storet_user:${storet_user_password}@${storet_host}:${work.dir}/${jobId.file}" todir="."/>
+    	<scp file="storet_user:${storet_user_password}@${storet_host}:/mnt/wqp_data/${dbFolder}/${jobId.file}" todir="."/>
     </target>
     	
     <target name="importData" depends="setStopRun" unless="stopRun">
