@@ -98,7 +98,7 @@ grep -q "successfully completed" ${EXPORT_LOG} || (echo "${EXPORT_LOG} does not 
 comm -13 <(grep -o ${DUMP_FILE_GREP} ${EXPORT_LOG}) <(ls | grep ${CLEAN_UP_GREP}) | xargs rm -f
 
 # download any dump files newer on remote than they are on local
-grep -o ${DUMP_FILE_GREP} ${EXPORT_LOG} | sed -e 's/^/http:\/\/www.epa.gov\/storet\/download\/storetw\//' | xargs -n 1 -P 12 wget -Nq
+grep -o ${DUMP_FILE_GREP} ${EXPORT_LOG} | sed -e 's/^/http:\/\/www3.epa.gov\/storet\/download\/storetw\//' | xargs -n 1 -P 12 wget -Nq
 
 # we have new data downloaded, so export the rundate
 stop_with_job_id
