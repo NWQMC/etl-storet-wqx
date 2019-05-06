@@ -43,7 +43,7 @@ function stop_with_job_id() {
     # Extract the date from the log file using Perl RegEx (-P) and only output (-o) the match
     # The tail command returns only the last match, while tee outputs to stdout and the file.
     # The tail must append (-a) to the properties file to preserve the property name.
-	grep -Po '\w+\s\d{2}\s\d{2}:\d{2}:\d{2}\s\d{4}' ${EXPORT_LOG} | tail -1 | tee -a job.id.date.properties
+	grep -Po '\w+\s\d{1,2}\s\d{2}:\d{2}:\d{2}\s\d{4}' ${EXPORT_LOG} | tail -1 | tee -a job.id.date.properties
 
     # Unix success exit code
 	exit 0
